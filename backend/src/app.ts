@@ -5,6 +5,8 @@ import {
   getDocumentShares
 } from "./controllers/share.controller.js";
 import express from "express";
+import fs from "fs";
+import path from "path";
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
@@ -91,3 +93,14 @@ app.delete("/api/documents/:id/share/:shareId", authenticate, revokeShare);
 // ─── Audit & Admin ───────────────────────────────────────────────────────────
 app.use("/api/audit", auditRoutes);
 app.use("/api/admin", adminRoutes);
+
+// ─── Hosted frontend (single origin deploy) ──────────────────────────────────
+// When STATIC_DIR points at a Vite build, Express serves it so the site and the
+// API share one URL and the relative "/api" calls keep working without CORS.
+const staticDir = process.env.STATIC_DIR;
+if (staticDir && fs.existsSync(staticDir)) {
+  app.use(express.static(staticDir));
+  app.get(/^(?!\/api\/).*/, (_req, res) => {
+    res.sendFile(path.join(staticDir, "index.html"));
+  });
+}

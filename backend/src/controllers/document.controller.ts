@@ -7,7 +7,9 @@ import { query } from "../config/db.js";
 import { CryptoService } from "../services/crypto.service.js";
 import { AuditService } from "../services/audit.service.js";
 
-const STORAGE_DIR = path.resolve(process.cwd(), "storage/encrypted");
+const STORAGE_DIR = process.env.STORAGE_DIR
+  ? path.resolve(process.env.STORAGE_DIR)
+  : path.resolve(process.cwd(), "storage/encrypted");
 
 if (!fs.existsSync(STORAGE_DIR)) {
   fs.mkdirSync(STORAGE_DIR, { recursive: true });
