@@ -30,6 +30,8 @@ async function migrate() {
         mime_type VARCHAR(100) NOT NULL,
         file_size_bytes BIGINT NOT NULL,
         sha256_checksum CHAR(64) NOT NULL,
+        iv VARCHAR(64) NOT NULL,
+        auth_tag VARCHAR(64) NOT NULL,
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_owner (owner_id),
@@ -38,19 +40,23 @@ async function migrate() {
       ) ENGINE=InnoDB;
     `);
 
-    // 3. Document Grants Table
+    // 3. Document Shares Table
     await conn.query(`
-      CREATE TABLE IF NOT EXISTS document_grants (
+      CREATE TABLE IF NOT EXISTS document_shares (
         id CHAR(36) PRIMARY KEY,
         document_id CHAR(36) NOT NULL,
-        grantee_id CHAR(36) NOT NULL,
-        permission ENUM("VIEW", "EDIT") NOT NULL DEFAULT "VIEW",
-        granted_by CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        shared_with_user_id CHAR(36) NOT NULL,
+        permission ENUM("VIEW", "DOWNLOAD") NOT NULL DEFAULT "VIEW",
+        max_downloads INT NULL,
+        download_count INT NOT NULL DEFAULT 0,
+        expires_at DATETIME NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY uq_doc_grantee (document_id, grantee_id),
-        CONSTRAINT fk_grant_doc FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
-        CONSTRAINT fk_grant_user FOREIGN KEY (grantee_id) REFERENCES users(id) ON DELETE CASCADE,
-        CONSTRAINT fk_grant_by FOREIGN KEY (granted_by) REFERENCES users(id) ON DELETE RESTRICT
+        UNIQUE KEY uq_doc_shared (document_id, shared_with_user_id),
+        INDEX idx_shared_user (shared_with_user_id),
+        CONSTRAINT fk_share_doc FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+        CONSTRAINT fk_share_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_share_user FOREIGN KEY (shared_with_user_id) REFERENCES users(id) ON DELETE CASCADE
       ) ENGINE=InnoDB;
     `);
 

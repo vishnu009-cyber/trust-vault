@@ -12,12 +12,12 @@ describe("TrustVault Security Boundary & Access Control Tests", () => {
   beforeAll(async () => {
     const ownerRes = await request(app)
       .post("/api/auth/login")
-      .send({ email: "owner@vault.local", password: "Password@123" });
+      .send({ email: "owner@vault.local", password: "Owner@123" });
     ownerToken = ownerRes.body.token;
 
     const viewerRes = await request(app)
       .post("/api/auth/login")
-      .send({ email: "viewer@vault.local", password: "Password@123" });
+      .send({ email: "viewer@vault.local", password: "Viewer@123" });
     viewerToken = viewerRes.body.token;
 
     const uploadRes = await request(app)
